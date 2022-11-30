@@ -6,20 +6,21 @@ import (
 	"net"
 	"strings"
 
-	servicebus "github.com/Azure/azure-service-bus-go"
+	servicebus "github.com/Azure/azure-sdk-for-go/sdk/messaging/azservicebus"
 	"github.com/Azure/go-amqp"
 )
 
 // NOTE: Although the error message says that the operation can be retried, amqp:internal-error has been found to be persistent until we rebuild the connection (i.e: restart the process)
 // sample error :
-// *Error{
-//    Condition: amqp:internal-error,
-//    Description: The service was unable to process the request; please retry the operation.
-//    For more information on exception types and proper exception handling, please refer to http://go.microsoft.com/fwlink/?LinkId=761101
-//    Reference:<REDACTED>,
-//    TrackingId:<REDACTED>,
-//    SystemTracker:<REDACTED> Topic:<REDACTED>, Timestamp:2021-06-19T23:17:15, Info: map[]
-// }
+//
+//	*Error{
+//	   Condition: amqp:internal-error,
+//	   Description: The service was unable to process the request; please retry the operation.
+//	   For more information on exception types and proper exception handling, please refer to http://go.microsoft.com/fwlink/?LinkId=761101
+//	   Reference:<REDACTED>,
+//	   TrackingId:<REDACTED>,
+//	   SystemTracker:<REDACTED> Topic:<REDACTED>, Timestamp:2021-06-19T23:17:15, Info: map[]
+//	}
 func isAmqpInternalError(err error) bool {
 	var amqpErr *amqp.Error
 	return errors.As(err, &amqpErr) &&
@@ -36,9 +37,9 @@ func isEOF(err error) bool {
 	return errors.Is(err, io.EOF)
 }
 
-func isConnClosedError(err error) bool {
-	errConnClosed := servicebus.ErrConnectionClosed("")
-	return errors.As(err, &errConnClosed)
+func isConnLostError(err error) bool {
+	var errConnLost *servicebus.Error
+	return errors.As(err, &errConnLost) && errConnLost.Code == servicebus.CodeConnectionLost
 }
 
 func isLinkDetachedError(err error) bool {
@@ -50,5 +51,5 @@ func IsConnectionDead(err error) bool {
 		isLinkDetachedError(err) ||
 		isAmqpInternalError(err) ||
 		isEOF(err) ||
-		isConnClosedError(err)
+		isConnLostError(err)
 }
