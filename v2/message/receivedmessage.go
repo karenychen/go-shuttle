@@ -16,7 +16,7 @@ type ReceivedMessage struct {
 func NewReceivedMessage(msg *servicebus.ReceivedMessage) (*ReceivedMessage, error) {
 	messageType, ok := msg.ApplicationProperties["type"]
 	if !ok {
-		return nil, fmt.Errorf("message did not include a \"type\" in UserProperties")
+		return nil, fmt.Errorf("message did not include a \"type\" in ApplicationProperties")
 	}
 	return &ReceivedMessage{msg, messageType.(string)}, nil
 }
