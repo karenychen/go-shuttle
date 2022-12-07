@@ -169,3 +169,5 @@ func (plr *peekLockRenewer) startPeriodicRenewal(ctx context.Context, message *a
 		}
 	}
 }
+
+// testing signed commits
